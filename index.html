@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Links with Previews</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400..800&family=Verdana:wght@400&display=swap');
+
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: Verdana, sans-serif;
+      background-color: #fff;
+      color: #000;
+    }
+
+    h1 {
+      font-family: 'EB Garamond', serif;
+      font-size: 80px;
+      font-weight: lighter;
+      margin-bottom: 40px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 40px;
+    }
+
+    .item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    iframe {
+      width: 100%;
+      height: 200px;
+      border: none;
+    }
+
+    .title {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+
+    .title a {
+      text-decoration: none;
+      color: black;
+    }
+
+    .title a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Birds</h1>
+
+  <div class="grid" id="previewGrid"></div>
+
+  <script type="module">
+    const links = [
+      ["https://indexmod.xyz/deinichenko-andrei", "Artist"],
+      ["https://face.indexmod.xyz", "Face"],
+      ["https://mask.indexmod.xyz", "Mask"],
+      ["https://indexmod.github.io/fluid/", "Fluid"],
+      ["https://pool.indexmod.xyz", "Pool"],
+      ["https://player.indexmod.xyz", "Player"],
+      ["https://indexmod.github.io/wave", "Wave"],
+      ["https://indexmod.github.io/sound", "Sound"],
+      ["https://satel.indexmod.xyz", "Layout"],
+      ["https://birds.indexmod.xyz", "Birds"],
+      ["https://liminal.indexmod.xyz", "Limi"],
+      ["https://air.indexmod.xyz", "Эфир"],
+      ["https://indexmod.xyz", "Indexmod"],
+      ["https://indexmod.xyz/urban-a-liana-2015", "Liana"]
+    ];
+
+    const grid = document.getElementById('previewGrid');
+
+    links.forEach(([url, label]) => {
+      const item = document.createElement('div');
+      item.className = 'item';
+
+      const iframe = document.createElement('iframe');
+      iframe.src = url;
+
+      const title = document.createElement('div');
+      title.className = 'title';
+      const a = document.createElement('a');
+      a.href = url;
+      a.textContent = label;
+      a.target = '_blank';
+      title.appendChild(a);
+
+      item.appendChild(iframe);
+      item.appendChild(title);
+      grid.appendChild(item);
+    });
+  </script>
+</body>
+</html>
