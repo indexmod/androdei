@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Links with Previews</title>
+  <title>Repo HTML & WEBLOC Previews</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400..800&family=Verdana:wght@400&display=swap');
 
@@ -55,31 +55,15 @@
   </style>
 </head>
 <body>
-  <h1>Birds</h1>
+  <h1>Previews from Repository</h1>
 
   <div class="grid" id="previewGrid"></div>
 
   <script type="module">
-    const links = [
-      ["https://indexmod.xyz/deinichenko-andrei", "Artist"],
-      ["https://face.indexmod.xyz", "Face"],
-      ["https://mask.indexmod.xyz", "Mask"],
-      ["https://indexmod.github.io/fluid/", "Fluid"],
-      ["https://pool.indexmod.xyz", "Pool"],
-      ["https://player.indexmod.xyz", "Player"],
-      ["https://indexmod.github.io/wave", "Wave"],
-      ["https://indexmod.github.io/sound", "Sound"],
-      ["https://satel.indexmod.xyz", "Layout"],
-      ["https://birds.indexmod.xyz", "Birds"],
-      ["https://liminal.indexmod.xyz", "Limi"],
-      ["https://air.indexmod.xyz", "Эфир"],
-      ["https://indexmod.xyz", "Indexmod"],
-      ["https://indexmod.xyz/urban-a-liana-2015", "Liana"]
-    ];
-
+    const repo = "indexmod/androdei";
     const grid = document.getElementById('previewGrid');
 
-    links.forEach(([url, label]) => {
+    function addPreview(url, label) {
       const item = document.createElement('div');
       item.className = 'item';
 
@@ -97,7 +81,45 @@
       item.appendChild(iframe);
       item.appendChild(title);
       grid.appendChild(item);
-    });
+    }
+
+    async function loadRepoPreviews() {
+      try {
+        const response = await fetch(`https://api.github.com/repos/${repo}/contents/`);
+        const files = await response.json();
+
+        // Фильтруем .html и .webloc
+        const filtered = files.filter(f => f.name.endsWith('.html') || f.name.endsWith('.webloc'));
+
+        filtered.forEach(f => {
+          // Для .html формируем URL как GitHub Pages
+          if (f.name.endsWith('.html')) {
+            const url = `https://${repo.split('/')[0]}.github.io/${repo.split('/')[1]}/${f.name}`;
+            addPreview(url, f.name);
+          }
+
+          // Для .webloc нужно получить содержимое файла и вытащить URL из XML
+          if (f.name.endsWith('.webloc')) {
+            fetch(f.download_url)
+              .then(res => res.text())
+              .then(text => {
+                // Парсим XML, вытаскиваем URL
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(text, "application/xml");
+                const urlNode = xmlDoc.querySelector("string");
+                if (urlNode && urlNode.textContent) {
+                  addPreview(urlNode.textContent, f.name);
+                }
+              })
+              .catch(e => console.error(`Ошибка загрузки ${f.name}:`, e));
+          }
+        });
+      } catch (e) {
+        console.error("Ошибка при загрузке файлов из репозитория:", e);
+      }
+    }
+
+    loadRepoPreviews();
   </script>
 </body>
 </html>

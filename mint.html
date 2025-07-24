@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Фоны с полосами</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: sans-serif;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+      width: 100%;
+    }
+
+    .half {
+      flex: 1;
+      background-size: var(--stripe-width, 20px) var(--stripe-width, 20px);
+      background-repeat: repeat;
+    }
+
+    .left {
+      background-color: #d8b7ff; /* сиреневый */
+      background-image: repeating-linear-gradient(
+        45deg,
+        #98ffeb 0,
+        #98ffeb var(--stripe-width, 20px),
+        #d8b7ff var(--stripe-width, 20px),
+        #d8b7ff calc(var(--stripe-width, 20px) * 2)
+      );
+    }
+
+    .right {
+      background-color: #98ffeb; /* мятный */
+      background-image: repeating-linear-gradient(
+        45deg,
+        #d8b7ff 0,
+        #d8b7ff var(--stripe-width, 20px),
+        #98ffeb var(--stripe-width, 20px),
+        #98ffeb calc(var(--stripe-width, 20px) * 2)
+      );
+    }
+
+    .slider-container {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    input[type=range] {
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="half left"></div>
+    <div class="half right"></div>
+  </div>
+
+  <div class="slider-container">
+    <label for="stripeRange">Толщина полос: </label>
+    <input type="range" id="stripeRange" min="4" max="100" value="20" />
+  </div>
+
+  <script>
+    const root = document.documentElement;
+    const slider = document.getElementById('stripeRange');
+
+    function updateStripeWidth(value) {
+      root.style.setProperty('--stripe-width', `${value}px`);
+    }
+
+    slider.addEventListener('input', (e) => {
+      updateStripeWidth(e.target.value);
+    });
+
+    updateStripeWidth(slider.value);
+  </script>
+</body>
+</html>
