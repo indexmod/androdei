@@ -26,12 +26,15 @@
        line-height: 1.3;
    }
 
-    h1 {
-      font-family: 'EB Garamond', serif;
-      font-size: 200px;
-      font-weight: lighter;
-      margin-bottom: 40px;
-    }
+   h1 {
+     font-family: 'EB Garamond', serif;
+     font-weight: lighter;
+     margin-bottom: 40px;
+     font-size: clamp(48px, 10vw, 200px);
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+   }
 
     .grid {
       display: grid;
@@ -70,14 +73,16 @@
 
   <div class="container">
     <p>
-        This&nbsp;one-page digital zine features a&nbsp;randomized gallery of&nbsp;bird images and&nbsp;accidental illustrations. If&nbsp;you are familiar with&nbsp;GitHub, you are invited to&nbsp;contribute by&nbsp;uploading your&nbsp;own illustrations via
-        <a href="https://github.com/indexmod/birds" style="display: inline-block; background: #ddd; padding: 2px 6px; border-radius: 10px; text-decoration: none; color: black;">Add</a>.
-        If&nbsp;you would like to&nbsp;show your&nbsp;support, you are welcome to&nbsp;
-        <a href="https://buymeacoffee.com/indexmod" style="display: inline-block; background: #f5e79e; padding: 2px 6px; border-radius: 10px; text-decoration: none; color: black;">Buy&nbsp;me&nbsp;a&nbsp;coffee</a>
-        or&nbsp;explore my&nbsp;
-        <a href="https://face.indexmod.xyz/" style="display: inline-block; background: #ddd; padding: 2px 6px; border-radius: 10px; text-decoration: none; color: black;">other&nbsp;work</a>.
-        Thank&nbsp;you
+      This one-page digital zine is created to easily collect and present web artworks. I just drop files and links into a repo folder on my desktop — and they appear in this layout. Based on my earlier concept
+      <a href="https://birds.indexmod.xyz" style="display: inline-block; background: #ddd; padding: 2px 6px; border-radius: 10px; text-decoration: none; color: black;"><strong>Birds</strong></a>,
+      it’s growing into a public platform for artist exchange.
+      If you’d like to show your support, you’re welcome to
+      <a href="https://buymeacoffee.com/indexmod" style="display: inline-block; background: #f5e79e; padding: 2px 6px; border-radius: 10px; text-decoration: none; color: black;">Buy me a coffee</a>
+      or explore my
+      <a href="https://face.indexmod.xyz/" style="display: inline-block; background: #ddd; padding: 2px 6px; border-radius: 10px; text-decoration: none; color: black;">other work</a>.
+      Thank you.
     </p>
+
 </div>
 
   <div class="grid" id="previewGrid"></div>
