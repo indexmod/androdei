@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Repo HTML & WEBLOC Previews</title>
+  <title>Web art by Andr oDei</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400..800&family=Verdana:wght@400&display=swap');
 
@@ -55,13 +55,17 @@
   </style>
 </head>
 <body>
-  <h1>Previews from Repository</h1>
+  <h1>Web art by Andr oDei</h1>
 
   <div class="grid" id="previewGrid"></div>
 
   <script type="module">
     const repo = "indexmod/androdei";
     const grid = document.getElementById('previewGrid');
+
+    function stripExtension(filename) {
+      return filename.replace(/\.[^/.]+$/, "");
+    }
 
     function addPreview(url, label) {
       const item = document.createElement('div');
@@ -88,27 +92,28 @@
         const response = await fetch(`https://api.github.com/repos/${repo}/contents/`);
         const files = await response.json();
 
-        // Фильтруем .html и .webloc
-        const filtered = files.filter(f => f.name.endsWith('.html') || f.name.endsWith('.webloc'));
+        const filtered = files.filter(f =>
+          (f.name.endsWith('.html') || f.name.endsWith('.webloc')) &&
+          !/^index\.html?$/i.test(f.name)
+        );
 
         filtered.forEach(f => {
-          // Для .html формируем URL как GitHub Pages
           if (f.name.endsWith('.html')) {
             const url = `https://${repo.split('/')[0]}.github.io/${repo.split('/')[1]}/${f.name}`;
-            addPreview(url, f.name);
+            const label = stripExtension(f.name);
+            addPreview(url, label);
           }
 
-          // Для .webloc нужно получить содержимое файла и вытащить URL из XML
           if (f.name.endsWith('.webloc')) {
             fetch(f.download_url)
               .then(res => res.text())
               .then(text => {
-                // Парсим XML, вытаскиваем URL
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(text, "application/xml");
                 const urlNode = xmlDoc.querySelector("string");
                 if (urlNode && urlNode.textContent) {
-                  addPreview(urlNode.textContent, f.name);
+                  const label = stripExtension(f.name);
+                  addPreview(urlNode.textContent, label);
                 }
               })
               .catch(e => console.error(`Ошибка загрузки ${f.name}:`, e));
