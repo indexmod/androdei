@@ -3,17 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Фоны с полосами</title>
+  <title>M I N T</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
       height: 100%;
-      font-family: sans-serif;
     }
 
     .container {
@@ -29,9 +24,9 @@
     }
 
     .left {
-      background-color: #d8b7ff; /* сиреневый */
+      background-color: #d8b7ff;
       background-image: repeating-linear-gradient(
-        45deg,
+        90deg,
         #98ffeb 0,
         #98ffeb var(--stripe-width, 20px),
         #d8b7ff var(--stripe-width, 20px),
@@ -40,9 +35,9 @@
     }
 
     .right {
-      background-color: #98ffeb; /* мятный */
+      background-color: #98ffeb;
       background-image: repeating-linear-gradient(
-        45deg,
+        90deg,
         #d8b7ff 0,
         #d8b7ff var(--stripe-width, 20px),
         #98ffeb var(--stripe-width, 20px),
@@ -52,17 +47,33 @@
 
     .slider-container {
       position: fixed;
-      bottom: 20px;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255, 255, 255, 0.8);
-      padding: 10px 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transform: translate(-50%, -50%);
     }
 
     input[type=range] {
-      width: 300px;
+      -webkit-appearance: none;
+      appearance: none;
+      width: 40px;
+      height: 40px;
+      background: white;
+      border: none;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 0;
+      height: 0;
+    }
+
+    input[type=range]::-moz-range-thumb {
+      width: 0;
+      height: 0;
+      border: none;
     }
   </style>
 </head>
@@ -73,7 +84,6 @@
   </div>
 
   <div class="slider-container">
-    <label for="stripeRange">Толщина полос: </label>
     <input type="range" id="stripeRange" min="4" max="100" value="20" />
   </div>
 
