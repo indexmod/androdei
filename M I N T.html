@@ -3,103 +3,79 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>M I N T</title>
+  <title>Круг-слайдер</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
       height: 100%;
-    }
-
-    .container {
+      background-color: #98ffeb; /* мятный */
       display: flex;
-      height: 100vh;
-      width: 100%;
+      align-items: center;
+      justify-content: center;
     }
 
-    .half {
-      flex: 1;
-      background-size: var(--stripe-width, 20px) var(--stripe-width, 20px);
-      background-repeat: repeat;
+    .circle {
+      background-color: #a64dff; /* фиолетовый */
+      border-radius: 50%;
+      transition: width 0.2s, height 0.2s;
     }
 
-    .left {
-      background-color: #d8b7ff;
-      background-image: repeating-linear-gradient(
-        90deg,
-        #98ffeb 0,
-        #98ffeb var(--stripe-width, 20px),
-        #d8b7ff var(--stripe-width, 20px),
-        #d8b7ff calc(var(--stripe-width, 20px) * 2)
-      );
-    }
-
-    .right {
-      background-color: #98ffeb;
-      background-image: repeating-linear-gradient(
-        90deg,
-        #d8b7ff 0,
-        #d8b7ff var(--stripe-width, 20px),
-        #98ffeb var(--stripe-width, 20px),
-        #98ffeb calc(var(--stripe-width, 20px) * 2)
-      );
-    }
-
-    .slider-container {
+    .slider-wrapper {
       position: fixed;
-      top: 50%;
+      bottom: 30px;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%);
     }
 
     input[type=range] {
-      -webkit-appearance: none;
+      width: 300px;
       appearance: none;
-      width: 40px;
-      height: 40px;
+      height: 6px;
       background: white;
-      border: none;
+      border-radius: 3px;
       outline: none;
       cursor: pointer;
     }
 
     input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
       appearance: none;
-      width: 0;
-      height: 0;
+      width: 20px;
+      height: 20px;
+      background: #a64dff;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
     }
 
     input[type=range]::-moz-range-thumb {
-      width: 0;
-      height: 0;
+      width: 20px;
+      height: 20px;
+      background: #a64dff;
+      border-radius: 50%;
       border: none;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="half left"></div>
-    <div class="half right"></div>
-  </div>
 
-  <div class="slider-container">
-    <input type="range" id="stripeRange" min="4" max="100" value="20" />
+  <div id="circle" class="circle" style="width: 150px; height: 150px;"></div>
+
+  <div class="slider-wrapper">
+    <input type="range" id="sizeSlider" min="50" max="400" value="150">
   </div>
 
   <script>
-    const root = document.documentElement;
-    const slider = document.getElementById('stripeRange');
+    const circle = document.getElementById('circle');
+    const slider = document.getElementById('sizeSlider');
 
-    function updateStripeWidth(value) {
-      root.style.setProperty('--stripe-width', `${value}px`);
-    }
-
-    slider.addEventListener('input', (e) => {
-      updateStripeWidth(e.target.value);
+    slider.addEventListener('input', () => {
+      const size = slider.value;
+      circle.style.width = `${size}px`;
+      circle.style.height = `${size}px`;
     });
-
-    updateStripeWidth(slider.value);
   </script>
+
 </body>
 </html>
