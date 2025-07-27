@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Scale</title>
+  <style>
+    body {
+      margin: 100px;
+      background: white;
+      display: flex;
+      justify-content: center;
+      align-items: start;
+      min-height: calc(100vh - 200px);
+      box-sizing: border-box;
+    }
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      position: relative;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .target {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      pointer-events: none;
+    }
+    .top-left { top: -100px; left: -100px; }
+    .top-right { top: -100px; right: -100px; }
+    .bottom-left { bottom: -100px; left: -100px; }
+    .bottom-right { bottom: -100px; right: -100px; }
+    .spacer {
+      height: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Линейка (перемещена наверх) -->
+    <svg viewBox="0 0 1000 60" style="margin-bottom: 30px;">
+      <g stroke="black" stroke-width="3">
+        <line x1="0" x2="0" y1="0" y2="30"/>
+        <line x1="100" x2="100" y1="0" y2="30"/>
+        <line x1="200" x2="200" y1="0" y2="30"/>
+        <line x1="300" x2="300" y1="0" y2="30"/>
+        <line x1="400" x2="400" y1="0" y2="30"/>
+        <line x1="500" x2="500" y1="0" y2="30"/>
+        <line x1="600" x2="600" y1="0" y2="30"/>
+        <line x1="700" x2="700" y1="0" y2="30"/>
+        <line x1="800" x2="800" y1="0" y2="30"/>
+        <line x1="900" x2="900" y1="0" y2="30"/>
+        <line x1="1000" x2="1000" y1="0" y2="30"/>
+      </g>
+      <g font-family="sans-serif" font-size="16" text-anchor="middle">
+        <text x="50" y="55">1</text>
+        <text x="150" y="55">2</text>
+        <text x="250" y="55">3</text>
+        <text x="350" y="55">4</text>
+        <text x="450" y="55">5</text>
+        <text x="550" y="55">6</text>
+        <text x="650" y="55">7</text>
+        <text x="750" y="55">8</text>
+        <text x="850" y="55">9</text>
+        <text x="950" y="55">10</text>
+      </g>
+    </svg>
+
+    <!-- Мишени по углам -->
+    <svg class="target top-left" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="30" stroke="black" fill="none" stroke-width="2"/>
+      <circle cx="60" cy="60" r="15" stroke="black" fill="none" stroke-width="2"/>
+      <line x1="45" y1="60" x2="75" y2="60" stroke="black" stroke-width="2"/>
+      <line x1="60" y1="45" x2="60" y2="75" stroke="black" stroke-width="2"/>
+    </svg>
+    <svg class="target top-right" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="30" stroke="black" fill="none" stroke-width="2"/>
+      <circle cx="60" cy="60" r="15" stroke="black" fill="none" stroke-width="2"/>
+      <line x1="45" y1="60" x2="75" y2="60" stroke="black" stroke-width="2"/>
+      <line x1="60" y1="45" x2="60" y2="75" stroke="black" stroke-width="2"/>
+    </svg>
+    <svg class="target bottom-left" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="30" stroke="black" fill="none" stroke-width="2"/>
+      <circle cx="60" cy="60" r="15" stroke="black" fill="none" stroke-width="2"/>
+      <line x1="45" y1="60" x2="75" y2="60" stroke="black" stroke-width="2"/>
+      <line x1="60" y1="45" x2="60" y2="75" stroke="black" stroke-width="2"/>
+    </svg>
+    <svg class="target bottom-right" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="30" stroke="black" fill="none" stroke-width="2"/>
+      <circle cx="60" cy="60" r="15" stroke="black" fill="none" stroke-width="2"/>
+      <line x1="45" y1="60" x2="75" y2="60" stroke="black" stroke-width="2"/>
+      <line x1="60" y1="45" x2="60" y2="75" stroke="black" stroke-width="2"/>
+    </svg>
+
+    <!-- Шахматка и цвет -->
+    <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+      <svg viewBox="0 0 300 100" style="width: 49%;">
+        <!-- Верхний ряд -->
+        <rect x="0" y="0" width="50" height="50" fill="black"/>
+        <rect x="50" y="0" width="50" height="50" fill="white"/>
+        <rect x="100" y="0" width="50" height="50" fill="black"/>
+        <rect x="150" y="0" width="50" height="50" fill="white"/>
+        <rect x="200" y="0" width="50" height="50" fill="black"/>
+        <rect x="250" y="0" width="50" height="50" fill="white"/>
+        <!-- Нижний ряд -->
+        <rect x="0" y="50" width="50" height="50" fill="white"/>
+        <rect x="50" y="50" width="50" height="50" fill="black"/>
+        <rect x="100" y="50" width="50" height="50" fill="white"/>
+        <rect x="150" y="50" width="50" height="50" fill="black"/>
+        <rect x="200" y="50" width="50" height="50" fill="white"/>
+        <rect x="250" y="50" width="50" height="50" fill="black"/>
+      </svg>
+      <svg viewBox="0 0 300 100" style="width: 49%;">
+        <rect x="0" y="0" width="50" height="50" fill="#9c8f7b"/>
+        <rect x="50" y="0" width="50" height="50" fill="#3c2e3f"/>
+        <rect x="100" y="0" width="50" height="50" fill="#25797a"/>
+        <rect x="150" y="0" width="50" height="50" fill="#f5d776"/>
+        <rect x="200" y="0" width="50" height="50" fill="#d94e56"/>
+        <rect x="250" y="0" width="50" height="50" fill="#000000"/>
+        <rect x="0" y="50" width="50" height="50" fill="#ffffff"/>
+        <rect x="50" y="50" width="50" height="50" fill="#888888"/>
+        <rect x="100" y="50" width="50" height="50" fill="#333333"/>
+        <rect x="150" y="50" width="50" height="50" fill="#aaaaaa"/>
+        <rect x="200" y="50" width="50" height="50" fill="#666666"/>
+        <rect x="250" y="50" width="50" height="50" fill="#222222"/>
+      </svg>
+    </div>
+
+    <!-- Контейнер для полос -->
+    <svg id="stripe-container" viewBox="0 0 1200 170" style="margin-top: 30px; width: 100%; height: 170px;"></svg>
+  </div>
+
+  <script>
+    const svgNS = "http://www.w3.org/2000/svg";
+    const container = document.getElementById('stripe-container');
+    const stripeWidth = 6.6667;
+    const stripeHeight = 170;
+    const stripeCount = 180; // 180 полос
+
+    for(let i = 0; i < stripeCount; i++) {
+      const rect = document.createElementNS(svgNS, 'rect');
+      rect.setAttribute('x', i * stripeWidth);
+      rect.setAttribute('y', 0);
+      rect.setAttribute('width', stripeWidth);
+      rect.setAttribute('height', stripeHeight);
+      rect.setAttribute('fill', i % 2 === 0 ? 'black' : 'white');
+      container.appendChild(rect);
+    }
+  </script>
+</body>
+</html>
