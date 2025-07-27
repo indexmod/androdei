@@ -152,50 +152,54 @@
     }
   </script>
   <!-- Контейнер для three.js -->
-  <div id="three-container"
-       style="position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
-              width: 200px; height: 200px; z-index: 1000; pointer-events: none;">
-  </div>
+<div id="three-container"
+     style="position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
+            width: 200px; height: 200px; z-index: 1000; pointer-events: none;">
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/OrbitControls.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/OrbitControls.min.js"></script>
 
-  <script>
-    const container = document.getElementById('three-container');
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+<script>
+  const container = document.getElementById('three-container');
+  const width = container.clientWidth;
+  const height = container.clientHeight;
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(2, 2, 2);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+  camera.position.set(2, 2, 2);
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    container.appendChild(renderer.domElement);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
 
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableZoom = false;
-    controls.enablePan = false;
-    controls.enableRotate = false;
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableZoom = false;
+  controls.enablePan = false;
+  controls.enableRotate = false;
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-    scene.add(ambientLight);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+  scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 10, 7.5);
-    scene.add(directionalLight);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  directionalLight.position.set(5, 10, 7.5);
+  scene.add(directionalLight);
 
-    // Куб
+  // Загрузка панорамы
+  const loader = new THREE.TextureLoader();
+  loader.load('https://raw.githubusercontent.com/indexmod/androdei/main/scale.png', function (texture) {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    scene.environment = texture;
+    scene.background = null;
+
     const geometry = new THREE.BoxGeometry(1, 1, 1);
-
-    const material = new THREE.MeshPhysicalMaterial({
+    const material = new THREE.MeshStandardMaterial({
       metalness: 1,
       roughness: 0,
-      reflectivity: 1,
-      transmission: 0,
-      clearcoat: 1,
-      clearcoatRoughness: 0,
+      envMap: texture,
+      envMapIntensity: 1,
     });
 
     const cube = new THREE.Mesh(geometry, material);
@@ -209,14 +213,15 @@
     }
 
     animate();
+  });
 
-    window.addEventListener('resize', () => {
-      const newWidth = container.clientWidth;
-      const newHeight = container.clientHeight;
-      camera.aspect = newWidth / newHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(newWidth, newHeight);
-    });
-  </script>
+  window.addEventListener('resize', () => {
+    const newWidth = container.clientWidth;
+    const newHeight = container.clientHeight;
+    camera.aspect = newWidth / newHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(newWidth, newHeight);
+  });
+</script>
 </body>
 </html>
