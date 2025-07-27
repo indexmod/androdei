@@ -41,7 +41,12 @@
 </head>
 <body>
   <div class="container">
-    <!-- Линейка (перемещена наверх) -->
+    <div id="three-container"
+         style="position: absolute; top: -220px; left: 50%; transform: translateX(-50%);
+                width: 200px; height: 200px; z-index: 1000; pointer-events: none;">
+      <canvas id="c"></canvas>
+    </div>
+
     <svg viewBox="0 0 1000 60" style="margin-bottom: 30px;">
       <g stroke="black" stroke-width="3">
         <line x1="0" x2="0" y1="0" y2="30"/>
@@ -70,7 +75,6 @@
       </g>
     </svg>
 
-    <!-- Мишени по углам -->
     <svg class="target top-left" viewBox="0 0 120 120">
       <circle cx="60" cy="60" r="30" stroke="black" fill="none" stroke-width="2"/>
       <circle cx="60" cy="60" r="15" stroke="black" fill="none" stroke-width="2"/>
@@ -96,17 +100,14 @@
       <line x1="60" y1="45" x2="60" y2="75" stroke="black" stroke-width="2"/>
     </svg>
 
-    <!-- Шахматка и цвет -->
     <div style="display: flex; justify-content: space-between; margin-top: 30px;">
       <svg viewBox="0 0 300 100" style="width: 49%;">
-        <!-- Верхний ряд -->
         <rect x="0" y="0" width="50" height="50" fill="black"/>
         <rect x="50" y="0" width="50" height="50" fill="white"/>
         <rect x="100" y="0" width="50" height="50" fill="black"/>
         <rect x="150" y="0" width="50" height="50" fill="white"/>
         <rect x="200" y="0" width="50" height="50" fill="black"/>
         <rect x="250" y="0" width="50" height="50" fill="white"/>
-        <!-- Нижний ряд -->
         <rect x="0" y="50" width="50" height="50" fill="white"/>
         <rect x="50" y="50" width="50" height="50" fill="black"/>
         <rect x="100" y="50" width="50" height="50" fill="white"/>
@@ -130,7 +131,6 @@
       </svg>
     </div>
 
-    <!-- Контейнер для полос -->
     <svg id="stripe-container" viewBox="0 0 1200 170" style="margin-top: 30px; width: 100%; height: 170px;"></svg>
   </div>
 
@@ -139,7 +139,7 @@
     const container = document.getElementById('stripe-container');
     const stripeWidth = 6.6667;
     const stripeHeight = 170;
-    const stripeCount = 180; // 180 полос
+    const stripeCount = 180;
 
     for(let i = 0; i < stripeCount; i++) {
       const rect = document.createElementNS(svgNS, 'rect');
@@ -151,75 +151,73 @@
       container.appendChild(rect);
     }
   </script>
-  <!-- Контейнер для three.js -->
-  <div id="three-container"
-       style="position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
-              width: 200px; height: 200px; z-index: 1000; pointer-events: none;">
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-
-  <script>
-    const threeContainer = document.getElementById('three-container');
-    const width = threeContainer.clientWidth;
-    const height = threeContainer.clientHeight;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(2, 2, 2);
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    threeContainer.appendChild(renderer.domElement);
-
-    const pmremGenerator = new THREE.PMREMGenerator(renderer);
-    pmremGenerator.compileEquirectangularShader();
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 10, 7.5);
-    scene.add(directionalLight);
-
-    const loader = new THREE.TextureLoader();
-    loader.load('https://raw.githubusercontent.com/indexmod/androdei/main/scale.png', function (texture) {
-      texture.mapping = THREE.EquirectangularReflectionMapping;
-      texture.colorSpace = THREE.SRGBColorSpace;
-
-      const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-      scene.environment = envMap;
-
-      const material = new THREE.MeshStandardMaterial({
-        metalness: 1,
-        roughness: 0,
-        envMap: envMap
-      });
-
-      const geometry = new THREE.BoxGeometry(1, 1, 1);
-      const cube = new THREE.Mesh(geometry, material);
-      scene.add(cube);
-
-      function animate() {
-        requestAnimationFrame(animate);
-        cube.rotation.y += 0.01;
-        cube.rotation.x += 0.005;
-        renderer.render(scene, camera);
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.172.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.172.0/examples/jsm/"
       }
-
-      animate();
-    });
-
-    window.addEventListener('resize', () => {
-      const newWidth = threeContainer.clientWidth;
-      const newHeight = threeContainer.clientHeight;
-      camera.aspect = newWidth / newHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(newWidth, newHeight);
-    });
+    }
   </script>
 
+  <script type="module">
+    import * as THREE from "three";
+    import { TextureLoader } from "three";
+    import { PMREMGenerator } from "three";
+
+    let scene, camera, renderer, cube;
+
+    const canvas = document.getElementById("c");
+    const width = canvas.clientWidth = 200;
+    const height = canvas.clientHeight = 200;
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 100);
+    camera.position.set(2, 2, 2);
+
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(5, 5, 5);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+    new TextureLoader().load(
+      "https://raw.githubusercontent.com/indexmod/androdei/main/scale.png",
+      function (texture) {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        texture.colorSpace = THREE.SRGBColorSpace;
+        const pmrem = new PMREMGenerator(renderer);
+        const envMap = pmrem.fromEquirectangular(texture).texture;
+        scene.environment = envMap;
+
+        const material = new THREE.MeshStandardMaterial({
+          metalness: 1,
+          roughness: 0,
+          envMap: envMap
+        });
+
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+
+        animate();
+      }
+    );
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (cube) {
+        cube.rotation.y += 0.01;
+        cube.rotation.x += 0.005;
+      }
+      renderer.render(scene, camera);
+    }
+  </script>
+</body>
 </html>
