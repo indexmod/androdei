@@ -152,76 +152,74 @@
     }
   </script>
   <!-- Контейнер для three.js -->
-<div id="three-container"
-     style="position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
-            width: 200px; height: 200px; z-index: 1000; pointer-events: none;">
-</div>
+  <div id="three-container"
+       style="position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
+              width: 200px; height: 200px; z-index: 1000; pointer-events: none;">
+  </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/OrbitControls.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 
-<script>
-  const container = document.getElementById('three-container');
-  const width = container.clientWidth;
-  const height = container.clientHeight;
+  <script>
+    const threeContainer = document.getElementById('three-container');
+    const width = threeContainer.clientWidth;
+    const height = threeContainer.clientHeight;
 
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-  camera.position.set(2, 2, 2);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(2, 2, 2);
 
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  renderer.setSize(width, height);
-  renderer.setPixelRatio(window.devicePixelRatio);
-  container.appendChild(renderer.domElement);
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    threeContainer.appendChild(renderer.domElement);
 
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableZoom = false;
-  controls.enablePan = false;
-  controls.enableRotate = false;
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-  scene.add(ambientLight);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  directionalLight.position.set(5, 10, 7.5);
-  scene.add(directionalLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 10, 7.5);
+    scene.add(directionalLight);
 
-  // Загрузка панорамы
-  const loader = new THREE.TextureLoader();
-  loader.load('https://raw.githubusercontent.com/indexmod/androdei/main/scale.png', function (texture) {
-    texture.mapping = THREE.EquirectangularReflectionMapping;
-    texture.colorSpace = THREE.SRGBColorSpace;
-    scene.environment = texture;
-    scene.background = null;
+    const loader = new THREE.TextureLoader();
+    loader.load('https://raw.githubusercontent.com/indexmod/androdei/main/scale.png', function (texture) {
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      texture.colorSpace = THREE.SRGBColorSpace;
 
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshStandardMaterial({
-      metalness: 1,
-      roughness: 0,
-      envMap: texture,
-      envMapIntensity: 1,
+      const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+      scene.environment = envMap;
+
+      const material = new THREE.MeshStandardMaterial({
+        metalness: 1,
+        roughness: 0,
+        envMap: envMap
+      });
+
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const cube = new THREE.Mesh(geometry, material);
+      scene.add(cube);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        cube.rotation.y += 0.01;
+        cube.rotation.x += 0.005;
+        renderer.render(scene, camera);
+      }
+
+      animate();
     });
 
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+    window.addEventListener('resize', () => {
+      const newWidth = threeContainer.clientWidth;
+      const newHeight = threeContainer.clientHeight;
+      camera.aspect = newWidth / newHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(newWidth, newHeight);
+    });
+  </script>
 
-    function animate() {
-      requestAnimationFrame(animate);
-      cube.rotation.y += 0.01;
-      cube.rotation.x += 0.005;
-      renderer.render(scene, camera);
-    }
-
-    animate();
-  });
-
-  window.addEventListener('resize', () => {
-    const newWidth = container.clientWidth;
-    const newHeight = container.clientHeight;
-    camera.aspect = newWidth / newHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(newWidth, newHeight);
-  });
-</script>
-</body>
 </html>
