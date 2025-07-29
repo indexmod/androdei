@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Зеркальный куб</title>
+  <style>
+    body {
+      margin: 0;
+      background: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #c {
+      width: 300px;
+      height: 300px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.172.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.172.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+
+    let scene, camera, renderer, mesh;
+
+    function init() {
+      scene = new THREE.Scene();
+
+      camera = new THREE.PerspectiveCamera(35, 1, 0.1, 20);
+      camera.position.set(0, 0, 10);
+
+      renderer = new THREE.WebGLRenderer({
+        canvas: document.getElementById("c"),
+        antialias: true,
+        alpha: true
+      });
+      renderer.setSize(300, 300);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const light = new THREE.DirectionalLight(0xffffff, 1);
+      light.position.set(5, 5, 5);
+      scene.add(light);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+
+      new THREE.TextureLoader().load(
+        "https://raw.githubusercontent.com/indexmod/androdei/main/scale.png",
+        function (texture) {
+          texture.mapping = THREE.EquirectangularReflectionMapping;
+          texture.colorSpace = THREE.SRGBColorSpace;
+
+          scene.environment = texture;
+
+          createObject();
+          animate();
+        }
+      );
+    }
+
+    function createObject() {
+      const material = new THREE.MeshStandardMaterial({
+        roughness: 0,
+        metalness: 1,
+        envMapIntensity: 1.5
+      });
+
+      const M = [];
+
+      let p = new THREE.BoxGeometry(3, 3, 3, 1, 1, 1);
+      M.push(p);
+
+      let m = p.clone();
+      m.rotateY(Math.PI / 4);
+      m.rotateX(Math.PI / 4);
+      M.push(m);
+
+      m = p.clone();
+      m.rotateZ(Math.PI / 4);
+      m.rotateX(Math.PI / 4);
+      M.push(m);
+
+      const merged = mergeGeometries(M, false);
+      mesh = new THREE.Mesh(merged, material);
+      scene.add(mesh);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (mesh) {
+        mesh.rotation.y += 0.01;
+        mesh.rotation.x += 0.005;
+      }
+      renderer.render(scene, camera);
+    }
+
+    init();
+  </script>
+</body>
+</html>

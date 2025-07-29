@@ -19,35 +19,35 @@
     }
 
     .container {
-       max-width: 1200px;
-       width: calc(100vw - 80px);
-       padding: 5px;
-       background: transparent;
-       box-shadow: none;
-       text-align: left;
-       font-size: 20px;
-       line-height: 1.3;
-   }
+      max-width: 1200px;
+      width: calc(100vw - 80px);
+      padding: 5px;
+      background: transparent;
+      box-shadow: none;
+      text-align: left;
+      font-size: 20px;
+      line-height: 1.3;
+    }
 
-   h1 {
-     font-family: 'EB Garamond', serif;
-     font-weight: lighter;
-     margin-bottom: 10px;
-     font-size: clamp(48px, 10vw, 200px);
-     white-space: nowrap;
-     overflow: hidden;
-     text-overflow: ellipsis;
-   }
+    h1 {
+      font-family: 'EB Garamond', serif;
+      font-weight: lighter;
+      margin-bottom: 10px;
+      font-size: clamp(48px, 10vw, 200px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-   h2 {
-     font-family: 'EB Garamond', serif;
-     font-weight: lighter;
-     margin-bottom: 40px;
-     font-size: clamp(30px, 10vw, 200px);
-     white-space: nowrap;
-     overflow: hidden;
-     text-overflow: ellipsis;
-   }
+    h2 {
+      font-family: 'EB Garamond', serif;
+      font-weight: lighter;
+      margin-bottom: 40px;
+      font-size: clamp(30px, 10vw, 200px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
     .grid {
       display: grid;
@@ -96,8 +96,7 @@
       <a href="https://face.indexmod.xyz/" style="display: inline-block; background: #ddd; padding: 2px 6px; border-radius: 10px; text-decoration: none; color: black;">other work</a>.
       Thank you.
     </p>
-
-</div>
+  </div>
 
   <div class="grid" id="previewGrid"></div>
 
@@ -139,9 +138,25 @@
           !/^index\.html?$/i.test(f.name)
         );
 
-        filtered.forEach(f => {
+        const owner = repo.split('/')[0];
+        const repoName = repo.split('/')[1];
+
+        const filesWithDates = await Promise.all(filtered.map(async f => {
+          try {
+            const commitRes = await fetch(`https://api.github.com/repos/${owner}/${repoName}/commits?path=${f.name}&per_page=1`);
+            const commitData = await commitRes.json();
+            const date = commitData[0]?.commit?.committer?.date || '1970-01-01T00:00:00Z';
+            return { ...f, date };
+          } catch {
+            return { ...f, date: '1970-01-01T00:00:00Z' };
+          }
+        }));
+
+        filesWithDates.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        filesWithDates.forEach(f => {
           if (f.name.endsWith('.html')) {
-            const url = `https://${repo.split('/')[0]}.github.io/${repo.split('/')[1]}/${f.name}`;
+            const url = `https://${owner}.github.io/${repoName}/${f.name}`;
             const label = stripExtension(f.name);
             addPreview(url, label);
           }
