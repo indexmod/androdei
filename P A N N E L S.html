@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Symmetrical Scaling Panels with Gap</title>
+<title>Symmetrical Scaling Panels with Glow</title>
 <style>
   body {
     margin: 0;
@@ -53,7 +53,6 @@
     leftPanel = new THREE.Mesh(panelGeometry, createPanelMaterial());
     rightPanel = new THREE.Mesh(panelGeometry, createPanelMaterial());
 
-    // Начальные позиции по X зададим в updateScale, чтобы были корректные с учётом масштаба
     leftPanel.position.set(0, originY, originZ);
     rightPanel.position.set(0, originY, originZ);
 
@@ -76,7 +75,7 @@
   const scaleDuration = 2000;
   let lastTime = performance.now();
 
-  const gapBetweenPanels = 20; // минимальный зазор между панелями по X
+  const gapBetweenPanels = 20;
 
   function newRandomScale() {
     return 0.3 + Math.random() * 1.2;
@@ -97,10 +96,16 @@
       leftPanel.scale.set(currentScale, currentScale, 1);
       rightPanel.scale.set(currentScale, currentScale, 1);
 
-      // Расчет позиций по X так, чтобы панели не касались
       const distanceX = panelWidth * currentScale + gapBetweenPanels;
       leftPanel.position.x = -distanceX / 2;
       rightPanel.position.x = distanceX / 2;
+
+      // Сияние пропорционально масштабу панели
+      const normalizedScale = (currentScale - 0.3) / (1.5 - 0.3);
+      const glowIntensity = THREE.MathUtils.clamp(normalizedScale, 0, 1);
+
+      leftPanel.material.emissiveIntensity = glowIntensity;
+      rightPanel.material.emissiveIntensity = glowIntensity;
     }
   }
 
