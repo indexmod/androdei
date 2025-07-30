@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Symmetrical Accelerating Panels with Proper Exit</title>
+<title>Symmetrical Scaling Panels with Gap</title>
 <style>
   body {
     margin: 0;
@@ -26,7 +26,6 @@
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // Материал с emissive для сияния
   function createPanelMaterial() {
     return new THREE.MeshLambertMaterial({
       color: 0xffffff,
@@ -46,85 +45,62 @@
 
   const originY = 0;
   const originZ = 0;
-  const originGapX = 50;
 
-  let speed = 1;
-  const acceleration = 0.05;
-
-  // Две панели — текущие летящие
   let leftPanel = null;
   let rightPanel = null;
 
-  // Флаг — летят ли панели
-  let panelsFlying = false;
-
-  // Создание пары панелей
   function createPanels() {
     leftPanel = new THREE.Mesh(panelGeometry, createPanelMaterial());
     rightPanel = new THREE.Mesh(panelGeometry, createPanelMaterial());
 
-    leftPanel.position.set(-originGapX, originY, originZ);
-    rightPanel.position.set(originGapX, originY, originZ);
+    // Начальные позиции по X зададим в updateScale, чтобы были корректные с учётом масштаба
+    leftPanel.position.set(0, originY, originZ);
+    rightPanel.position.set(0, originY, originZ);
 
     leftPanel.rotation.y = Math.PI / 4;
     rightPanel.rotation.y = -Math.PI / 4;
 
-    leftPanel.scale.set(0.01, 0.01, 1);
-    rightPanel.scale.set(0.01, 0.01, 1);
+    leftPanel.scale.set(1, 1, 1);
+    rightPanel.scale.set(1, 1, 1);
 
     scene.add(leftPanel);
     scene.add(rightPanel);
-
-    speed = 1;
-    panelsFlying = true;
   }
 
-  // Запускаем первую пару
   createPanels();
 
-  // Границы ухода панелей (за край экрана)
-  const leftEdgeX = -window.innerWidth / 2 - panelWidth;
-  const rightEdgeX = window.innerWidth / 2 + panelWidth;
+  // Параметры анимации масштаба
+  let scaleTarget = 1;
+  let scaleStart = 1;
+  let scaleProgress = 0;
+  const scaleDuration = 2000;
+  let lastTime = performance.now();
 
-  function updatePanels() {
-    if (!panelsFlying) return;
+  const gapBetweenPanels = 20; // минимальный зазор между панелями по X
 
-    speed += acceleration;
+  function newRandomScale() {
+    return 0.3 + Math.random() * 1.2;
+  }
 
-    leftPanel.position.x -= speed;
-    rightPanel.position.x += speed;
+  scaleTarget = newRandomScale();
 
-    leftPanel.position.z -= speed * 2;
-    rightPanel.position.z -= speed * 2;
+  function updateScale(delta) {
+    scaleProgress += delta / scaleDuration;
+    if (scaleProgress >= 1) {
+      scaleStart = scaleTarget;
+      scaleTarget = newRandomScale();
+      scaleProgress = 0;
+    }
+    const currentScale = THREE.MathUtils.lerp(scaleStart, scaleTarget, scaleProgress);
 
-    const scaleValue = Math.min(0.01 + speed / 10, 1.2);
-    leftPanel.scale.set(scaleValue, scaleValue, 1);
-    rightPanel.scale.set(scaleValue, scaleValue, 1);
+    if (leftPanel && rightPanel) {
+      leftPanel.scale.set(currentScale, currentScale, 1);
+      rightPanel.scale.set(currentScale, currentScale, 1);
 
-    // Расчёт прогресса приближения для сияния
-    let leftProgress = (leftPanel.position.x - leftEdgeX) / ( -leftEdgeX - (-originGapX));
-    leftProgress = THREE.MathUtils.clamp(leftProgress, 0, 1);
-    let rightProgress = (rightEdgeX - rightPanel.position.x) / (rightEdgeX - originGapX);
-    rightProgress = THREE.MathUtils.clamp(rightProgress, 0, 1);
-
-    leftPanel.material.emissiveIntensity = 1 - leftProgress;
-    rightPanel.material.emissiveIntensity = 1 - rightProgress;
-
-    // Если панели ушли полностью за экран - удаляем их и готовим новые
-    if (leftPanel.position.x < leftEdgeX && rightPanel.position.x > rightEdgeX) {
-      scene.remove(leftPanel);
-      scene.remove(rightPanel);
-      leftPanel.geometry.dispose();
-      leftPanel.material.dispose();
-      rightPanel.geometry.dispose();
-      rightPanel.material.dispose();
-
-      leftPanel = null;
-      rightPanel = null;
-      panelsFlying = false;
-
-      // Создаем новую пару через небольшой таймаут (0,1 секунды) для плавности
-      setTimeout(createPanels, 100);
+      // Расчет позиций по X так, чтобы панели не касались
+      const distanceX = panelWidth * currentScale + gapBetweenPanels;
+      leftPanel.position.x = -distanceX / 2;
+      rightPanel.position.x = distanceX / 2;
     }
   }
 
@@ -134,9 +110,13 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  function animate() {
+  function animate(time = performance.now()) {
     requestAnimationFrame(animate);
-    updatePanels();
+    const delta = time - lastTime;
+    lastTime = time;
+
+    updateScale(delta);
+
     renderer.render(scene, camera);
   }
   animate();
