@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Circles Music Box</title>
+  <style>
+    html,body{
+      height:100%;
+      margin:0;
+      background: #cfeffd; /* light blue background */
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      -webkit-user-select:none; user-select:none;
+    }
+    canvas{
+      display:block;
+      width:100vw;
+      height:100vh;
+    }
+    #startOverlay{
+      position:fixed; inset:0; display:flex;align-items:center;justify-content:center;
+      background: rgba(0,0,0,0.14); backdrop-filter: blur(2px);
+    }
+    .btn{
+      background: white; border:0; padding:14px 20px; border-radius:12px; font-weight:700; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,0.2);
+    }
+    .info{
+      position:fixed; left:12px; bottom:12px; background:rgba(255,255,255,0.85); padding:8px 10px; border-radius:10px; font-size:13px;
+      box-shadow:0 6px 14px rgba(0,0,0,0.08);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="startOverlay">
+    <div style="text-align:center">
+      <div style="margin-bottom:12px; font-size:18px; font-weight:700">Circles Music Box</div>
+      <button id="startBtn" class="btn">Click to start — enable sound</button>
+      <div style="margin-top:8px; font-size:13px; color:#222">Resize window to change how often circles touch edges/each other.</div>
+    </div>
+  </div>
+  <div class="info">Black & white circles — collision makes a music-box bell sound</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  let W=0,H=0;
+  function fit(){
+    W = canvas.width = innerWidth;
+    H = canvas.height = innerHeight;
+  }
+  fit();
+  window.addEventListener('resize', onResize);
+
+  function onResize(){
+    fit();
+    // recompute number of circles based on area
+    const newTarget = Math.max(6, Math.floor((W*H) / (140000))); // density: 1 per ~140k px
+    adjustCount(newTarget);
+  }
+
+  // audio setup (unlocked after user click)
+  let audioCtx = null;
+  function unlockAudio(){
+    if(audioCtx) return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContext();
+    // create a tiny silent buffer to resume audio in some browsers
+    audioCtx.resume && audioCtx.resume();
+  }
+
+  // bell-like sound using short FM-ish synthesis and decay
+  function playBell(freq){
+    if(!audioCtx) return;
+    const t = audioCtx.currentTime;
+    const carrier = audioCtx.createOscillator();
+    const mod = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const gainNode = audioCtx.createGain();
+    const biquad = audioCtx.createBiquadFilter();
+
+    // parameters
+    carrier.type = 'sine';
+    mod.type = 'sine';
+    carrier.frequency.value = freq; // main pitch
+    mod.frequency.value = freq * (1 + (Math.random()*3)); // modulator frequency
+    modGain.gain.value = freq * 0.8 * (Math.random()*0.6 + 0.2);
+
+    // envelope
+    const attack = 0.002;
+    const decay = 1.5 + Math.random()*1.2; // seconds
+
+    gainNode.gain.setValueAtTime(0.0001, t);
+    gainNode.gain.exponentialRampToValueAtTime(1.0, t + attack);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+
+    biquad.type = 'highshelf';
+    biquad.frequency.value = 2000;
+    biquad.gain.value = 6;
+
+    // connect chain: mod -> modGain -> carrier.frequency (via AudioParam) by using setValue automation
+    // Since direct frequency modulation via audio-rate AudioParam isn't supported uniformly, we'll approximate using gain node to control oscillator detune
+    // Instead we use an oscillator to drive frequency via createGain connecting to frequency (works in modern browsers)
+    mod.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    carrier.connect(biquad);
+    biquad.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    carrier.start(t);
+    mod.start(t);
+
+    // stop nodes after decay
+    carrier.stop(t + decay + 0.1);
+    mod.stop(t + decay + 0.1);
+  }
+
+  // circle simulation
+  class Circle{
+    constructor(x,y,r, vx,vy, color){
+      this.x=x; this.y=y; this.r=r; this.vx=vx; this.vy=vy; this.color=color;
+      this.mass = r * r; // approximate mass
+    }
+
+    draw(){
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+      ctx.fillStyle = this.color;
+      ctx.fill();
+    }
+
+    step(dt){
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+    }
+  }
+
+  let circles = [];
+
+  function rand(min,max){ return min + Math.random()*(max-min); }
+
+  function initCount(n){
+    circles = [];
+    for(let i=0;i<n;i++){
+      const r = Math.round(rand(12,32));
+      const x = rand(r, W-r);
+      const y = rand(r, H-r);
+      const speed = rand(40, 180); // px/sec
+      const ang = rand(0, Math.PI*2);
+      const vx = Math.cos(ang)*speed;
+      const vy = Math.sin(ang)*speed;
+      const color = Math.random() > 0.5 ? '#000' : '#fff';
+      circles.push(new Circle(x,y,r,vx,vy,color));
+    }
+  }
+
+  function adjustCount(target){
+    const diff = target - circles.length;
+    if(diff > 0){
+      for(let i=0;i<diff;i++){
+        const r = Math.round(rand(12,32));
+        const x = rand(r, W-r);
+        const y = rand(r, H-r);
+        const speed = rand(40, 180);
+        const ang = rand(0, Math.PI*2);
+        const vx = Math.cos(ang)*speed;
+        const vy = Math.sin(ang)*speed;
+        const color = Math.random() > 0.5 ? '#000' : '#fff';
+        circles.push(new Circle(x,y,r,vx,vy,color));
+      }
+    } else if(diff < 0){
+      circles.splice(diff);
+    }
+  }
+
+  // collision helpers
+  function resolveWallCollision(c){
+    let collided = false;
+    if(c.x - c.r <= 0){ c.x = c.r; c.vx = Math.abs(c.vx); collided = true; }
+    if(c.x + c.r >= W){ c.x = W - c.r; c.vx = -Math.abs(c.vx); collided = true; }
+    if(c.y - c.r <= 0){ c.y = c.r; c.vy = Math.abs(c.vy); collided = true; }
+    if(c.y + c.r >= H){ c.y = H - c.r; c.vy = -Math.abs(c.vy); collided = true; }
+    if(collided){
+      // random bell pitch depending on size and speed
+      const speed = Math.hypot(c.vx,c.vy);
+      const base = 220 + (50 - c.r) * 8 + speed * 0.25;
+      playBell(Math.max(120, base * (0.8 + Math.random()*0.6)));
+    }
+  }
+
+  function resolveCircleCollision(a,b){
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const dist = Math.hypot(dx,dy);
+    if(dist === 0) return false;
+    const minDist = a.r + b.r;
+    if(dist < minDist - 0.5){
+      // overlap — separate
+      const overlap = (minDist - dist) / 2;
+      const nx = dx / dist;
+      const ny = dy / dist;
+      a.x -= nx * overlap;
+      a.y -= ny * overlap;
+      b.x += nx * overlap;
+      b.y += ny * overlap;
+
+      // relative velocity
+      const rvx = b.vx - a.vx;
+      const rvy = b.vy - a.vy;
+      const rel = rvx*nx + rvy*ny;
+      if(rel > 0) return true; // moving apart
+
+      // compute impulse scalar for elastic collision
+      const e = 0.95; // restitution
+      const j = -(1 + e) * rel / (1/a.mass + 1/b.mass);
+      const jx = j * nx;
+      const jy = j * ny;
+      a.vx -= jx / a.mass;
+      a.vy -= jy / a.mass;
+      b.vx += jx / b.mass;
+      b.vy += jy / b.mass;
+
+      // subtle damping so things don't explode
+      a.vx *= 0.995; a.vy *= 0.995;
+      b.vx *= 0.995; b.vy *= 0.995;
+
+      // play bell — pitch depends on relative speed and radii
+      const relSpeed = Math.hypot(rvx, rvy);
+      const avgR = (a.r + b.r) * 0.5;
+      const pitch = 260 + (100 - avgR)*6 + relSpeed * 0.5 + Math.random()*120;
+      playBell(Math.max(120, pitch));
+      return true;
+    }
+    return false;
+  }
+
+  // main loop
+  let last = performance.now();
+  function loop(now){
+    const dt = (now - last) / 1000;
+    last = now;
+    ctx.clearRect(0,0,W,H);
+
+    // step
+    for(const c of circles){
+      c.step(dt);
+      resolveWallCollision(c);
+    }
+
+    // circle-circle collisions (naive O(n^2), fine for tens of circles)
+    for(let i=0;i<circles.length;i++){
+      for(let j=i+1;j<circles.length;j++){
+        resolveCircleCollision(circles[i], circles[j]);
+      }
+    }
+
+    // draw with subtle shadow to pop on light-blue
+    for(const c of circles){
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.18)';
+      ctx.shadowBlur = 10;
+      c.draw();
+      ctx.restore();
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  // initialize with area-based count
+  const initialCount = Math.max(6, Math.floor((W*H) / (140000)));
+  initCount(initialCount);
+
+  // start button
+  const startOverlay = document.getElementById('startOverlay');
+  const startBtn = document.getElementById('startBtn');
+  startBtn.addEventListener('click', ()=>{
+    unlockAudio();
+    startOverlay.style.display = 'none';
+    last = performance.now();
+    requestAnimationFrame(loop);
+  });
+
+  // click anywhere to add a circle and also resume audio if needed
+  canvas.addEventListener('pointerdown', (ev)=>{
+    if(!audioCtx) unlockAudio();
+    // add a circle at pointer
+    const r = Math.round(rand(12,28));
+    const x = ev.clientX;
+    const y = ev.clientY;
+    const speed = rand(40, 200);
+    const ang = rand(0, Math.PI*2);
+    const vx = Math.cos(ang)*speed;
+    const vy = Math.sin(ang)*speed;
+    const color = Math.random() > 0.5 ? '#000' : '#fff';
+    circles.push(new Circle(x,y,r,vx,vy,color));
+  });
+
+  // optional: keep velocities stable on visibility change
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible') last = performance.now();
+  });
+
+})();
+</script>
+</body>
+</html>
