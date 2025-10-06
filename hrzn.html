@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Analog Sea Gradient with Sound</title>
+  <style>
+    html,body{height:100%;margin:0;background:#0a1630;overflow:hidden}
+    .scene{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;animation:hueShift 60s ease-in-out infinite alternate}
+    .sky{position:absolute;top:0;left:0;right:0;height:60%;background:linear-gradient(to bottom,#08132c 0%,#1a2a5c 40%,#23406c 80%,#2c4e7c 100%);filter:blur(1px) saturate(1.1)}
+    .horizon{position:absolute;top:60%;left:0;right:0;height:2px;background:linear-gradient(to right,rgba(255,255,255,0.5),rgba(255,255,255,0.05));filter:blur(0.6px)}
+    .sea{position:absolute;top:60%;left:0;right:0;bottom:0;overflow:hidden;background:linear-gradient(to bottom,#1a2f56 0%,#254a7c 60%,#3265a5 100%);}
+    .wave-layer{position:absolute;left:0;right:0;height:100%;top:0;background-image:repeating-linear-gradient(to bottom,rgba(255,255,255,0.15) 0px,rgba(255,255,255,0.12) 2px,rgba(255,255,255,0.08) 6px,rgba(255,255,255,0.05) 12px,rgba(255,255,255,0.1) 20px,rgba(255,255,255,0.08) 32px,rgba(255,255,255,0.05) 48px,rgba(255,255,255,0) 64px);opacity:.8;filter:blur(1px) contrast(1.1);animation:flow 12s linear infinite;transform-origin:center bottom}
+    .wave-layer:nth-child(1){animation-duration:18s;opacity:.6;transform:scaleY(1)}
+    .wave-layer:nth-child(2){animation-duration:22s;opacity:.45;transform:scaleY(1.08) translateY(2px)}
+    .wave-layer:nth-child(3){animation-duration:26s;opacity:.32;transform:scaleY(1.15) translateY(4px)}
+    @keyframes flow{0%{background-position-y:0}100%{background-position-y:64px}}
+    @keyframes hueShift{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(18deg)}}
+    .reflection{position:absolute;top:60%;left:0;right:0;height:40%;background:linear-gradient(to bottom,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0) 100%);mix-blend-mode:overlay;opacity:.35;filter:blur(8px)}
+    .grain{position:absolute;inset:0;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.6' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.12'/></svg>");background-size:15%;mix-blend-mode:overlay;opacity:.3;pointer-events:none}
+    .scanlines{position:absolute;inset:0;background-image:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0px,rgba(0,0,0,0) 4px,rgba(0,0,0,0.05) 6px,rgba(0,0,0,0.05) 7px);mix-blend-mode:multiply;opacity:.45;pointer-events:none}
+    .vignette{position:absolute;inset:0;background:radial-gradient(circle at center,rgba(0,0,0,0) 60%,rgba(0,0,0,0.35) 100%);mix-blend-mode:multiply;pointer-events:none}
+    .hint{position:fixed;left:12px;top:12px;background:rgba(0,0,0,0.35);padding:8px;border-radius:8px;font-size:13px;color:#dfefff}
+  </style>
+</head>
+<body>
+  <div class="scene" id="scene">
+    <div class="sky"></div>
+    <div class="horizon"></div>
+    <div class="sea">
+      <div class="wave-layer"></div>
+      <div class="wave-layer"></div>
+      <div class="wave-layer"></div>
+    </div>
+    <div class="reflection"></div>
+    <div class="grain"></div>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    <div class="hint">Кликните по экрану, чтобы включить звук — крик чаек и шум моря (синтетически сгенерировано)</div>
+  </div>
+
+  <script>
+    // Web Audio: генерация шума моря и криков чаек без файлов
+    let audioCtx = null;
+    let seaNode = null;
+    let seaGain = null;
+    let running = false;
+    let seagullTimers = [];
+
+    function createNoiseBuffer(durationSeconds = 2){
+      const sr = audioCtx.sampleRate;
+      const length = durationSeconds * sr;
+      const buffer = audioCtx.createBuffer(1, length, sr);
+      const data = buffer.getChannelData(0);
+      for(let i=0;i<length;i++) data[i] = (Math.random()*2 -1) * (Math.random() * 0.6); // variable amplitude
+      return buffer;
+    }
+
+    function startSea(){
+      // create looping noise source filtered to low frequencies and modulated for wave swell
+      const noiseBuf = createNoiseBuffer(3);
+      const source = audioCtx.createBufferSource(); source.buffer = noiseBuf; source.loop = true;
+      const lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1200;
+      const bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 400; bp.Q.value = 0.7;
+
+      seaGain = audioCtx.createGain(); seaGain.gain.value = 0.35;
+
+      // Slow LFO to simulate swell (gain) and another to modulate lowpass cutoff
+      const lfo = audioCtx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.08; // 0.08 Hz ~ 12.5s per cycle
+      const lfoGain = audioCtx.createGain(); lfoGain.gain.value = 0.25;
+      lfo.connect(lfoGain);
+      lfoGain.connect(seaGain.gain);
+
+      const lfo2 = audioCtx.createOscillator(); lfo2.type = 'sine'; lfo2.frequency.value = 0.06;
+      const lfo2Gain = audioCtx.createGain(); lfo2Gain.gain.value = 350; // cutoff modulation depth
+      lfo2.connect(lfo2Gain);
+      lfo2Gain.connect(lp.frequency);
+
+      source.connect(lp);
+      lp.connect(bp);
+      bp.connect(seaGain);
+
+      // gentle stereo widening via split delays
+      const delayL = audioCtx.createDelay(); delayL.delayTime.value = 0.015;
+      const delayR = audioCtx.createDelay(); delayR.delayTime.value = 0.03;
+      const merger = audioCtx.createChannelMerger(2);
+
+      seaGain.connect(delayL);
+      seaGain.connect(delayR);
+      delayL.connect(merger,0,0);
+      delayR.connect(merger,0,1);
+
+      const outGain = audioCtx.createGain(); outGain.gain.value = 0.9;
+      merger.connect(outGain);
+
+      outGain.connect(audioCtx.destination);
+
+      source.start(); lfo.start(); lfo2.start();
+
+      seaNode = {source, lfo, lfo2, outGain};
+    }
+
+    function stopSea(){
+      if(!seaNode) return;
+      try{ seaNode.source.stop(); seaNode.lfo.stop(); seaNode.lfo2.stop(); }catch(e){}
+      seaNode = null;
+    }
+
+    function playSeagull(){
+      // Seagull cry = frequency-swept oscillator + short noise burst through bandpass
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator(); osc.type = 'sine';
+      const oscGain = audioCtx.createGain(); oscGain.gain.value = 0;
+
+      // frequency sweep
+      osc.frequency.setValueAtTime(700, now);
+      osc.frequency.exponentialRampToValueAtTime(1800, now + 0.5);
+
+      // amplitude envelope
+      oscGain.gain.setValueAtTime(0.0001, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.7, now+0.08);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, now+1.2);
+
+      // noise squawk
+      const noiseBuf = createNoiseBuffer(0.8);
+      const nsrc = audioCtx.createBufferSource(); nsrc.buffer = noiseBuf; nsrc.loop = false;
+      const nFilt = audioCtx.createBiquadFilter(); nFilt.type = 'bandpass'; nFilt.frequency.value = 2000; nFilt.Q.value = 1.2;
+      const nGain = audioCtx.createGain(); nGain.gain.value = 0.0;
+
+      nGain.gain.setValueAtTime(0.0001, now);
+      nGain.gain.exponentialRampToValueAtTime(0.6, now+0.02);
+      nGain.gain.exponentialRampToValueAtTime(0.0001, now+0.6);
+
+      // spatialization — panner with small random position
+      const p = audioCtx.createStereoPanner(); p.pan.value = (Math.random()*2-1) * 0.6;
+
+      osc.connect(oscGain); oscGain.connect(p);
+      nsrc.connect(nFilt); nFilt.connect(nGain); nGain.connect(p);
+
+      p.connect(audioCtx.destination);
+
+      osc.start(now); osc.stop(now+1.3);
+      nsrc.start(now); nsrc.stop(now+0.9);
+    }
+
+    function scheduleSeagulls(){
+      // schedule seagulls at random intervals 5-18s
+      function scheduleOne(){
+        const t = 5000 + Math.random()*13000;
+        const id = setTimeout(()=>{
+          playSeagull();
+          scheduleOne();
+        }, t);
+        seagullTimers.push(id);
+      }
+      scheduleOne();
+    }
+
+    function clearSeagulls(){seagullTimers.forEach(i=>clearTimeout(i)); seagullTimers=[]}
+
+    async function toggleAudio(){
+      if(!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if(!running){
+        // resume (for browsers that require user gesture)
+        await audioCtx.resume();
+        startSea();
+        scheduleSeagulls();
+        running = true;
+        document.querySelector('.hint').textContent = 'Кликните ещё раз, чтобы остановить звук.';
+      } else {
+        stopSea();
+        clearSeagulls();
+        audioCtx.suspend();
+        running = false;
+        document.querySelector('.hint').textContent = 'Кликните по экрану, чтобы включить звук — крик чаек и шум моря (синтетически сгенерировано)';
+      }
+    }
+
+    // single click toggles sound; ignore clicks on small controls (none here)
+    document.getElementById('scene').addEventListener('click', async (e)=>{ await toggleAudio(); });
+
+    // accessibility: start on Space/Enter as well
+    window.addEventListener('keydown', async (e)=>{ if(e.key===' '||e.key==='Enter') { e.preventDefault(); await toggleAudio(); } });
+
+  </script>
+</body>
+</html>
