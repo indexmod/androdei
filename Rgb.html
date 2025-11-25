@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RGB + Шахматка — пиксельная анимация</title>
+  <style>
+    html,body{height:100%;margin:0;display:flex;align-items:center;justify-content:center;background:#111}
+    .wrap{display:flex;flex-direction:column;gap:12px;align-items:center}
+    canvas{image-rendering:pixelated;border:6px solid #222;background:#000}
+    .hint{color:#ddd;font-family:Inter, system-ui, sans-serif;font-size:13px}
+    /* Поддерживаем масштабирование на экране: канвас рисуется в большом разрешении, но отображается с увеличением */
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <canvas id="px" width="600" height="600"></canvas>
+    <div class="hint">Клетка: 3×3 пикселя — RGB-ячейки чередуются с шахматной доской. Анимация циклически делает по очереди один цвет ярче, остальные темнеют.</div>
+  </div>
+
+  <script>
+    // Параметры
+    const PIXEL = 3;            // размер квадрата в пикселях
+    const WIDTH = 600;         // физическая ширина холста в px
+    const HEIGHT = 600;        // высота
+    const phaseMs = 1200;      // длительность фазы для каждого цвета
+
+    const canvas = document.getElementById('px');
+    const ctx = canvas.getContext('2d');
+
+    // Количество ячеек
+    const cols = Math.floor(WIDTH / PIXEL);
+    const rows = Math.floor(HEIGHT / PIXEL);
+
+    // Распределим цветные клетки и шахматку.
+    // Если (x+y) % 2 == 0 -> шахматная клетка (ч/б), иначе — цветная.
+    // Для цветных назначим один из трех цветов равномерно.
+    const colors = ['red','green','blue'];
+    const grid = new Array(rows);
+    for(let y=0;y<rows;y++){
+      grid[y]=new Array(cols);
+      for(let x=0;x<cols;x++){
+        if((x+y)%2===0){
+          // Шахматная — двухтонная: черная или темно-серая
+          grid[y][x] = {type:'checker', v: (x%2===0) ? 0 : 1};
+        } else {
+          // Цветная — назначаем циклически цвет, чтобы распределение выглядело равномерно
+          const idx = (x + y) % 3; // 0..2
+          grid[y][x] = {type:'color', color: colors[idx]};
+        }
+      }
+    }
+
+    // Функция сглаживания (ease)
+    function easeInOut(t){
+      return t<0.5 ? 2*t*t : -1 + (4 - 2*t)*t;
+    }
+
+    let start = performance.now();
+
+    function draw(now){
+      const elapsed = now - start;
+      const cycle = phaseMs * 3;
+      const phasePos = (elapsed % cycle) / phaseMs; // 0..3
+      const activeIndex = Math.floor(phasePos) % 3; // 0,1,2
+      const phaseProgress = (phasePos - Math.floor(phasePos)); // 0..1
+      const e = easeInOut(phaseProgress);
+
+      // для каждого базового цвета вычислим множитель яркости
+      // активный цвет: от 0.2 -> 1.0; неактивные: от 1.0 -> 0.2 (или наоборот)
+      const bright = [0.2,0.2,0.2];
+      for(let i=0;i<3;i++){
+        if(i===activeIndex) bright[i] = 0.2 + 0.8*e; // повышается
+        else bright[i] = 0.2 + 0.8*(1 - e); // затемняется
+      }
+
+      // очистка
+      ctx.clearRect(0,0,WIDTH,HEIGHT);
+
+      // рисуем сетку
+      for(let y=0;y<rows;y++){
+        for(let x=0;x<cols;x++){
+          const cell = grid[y][x];
+          const sx = x*PIXEL;
+          const sy = y*PIXEL;
+
+          if(cell.type==='checker'){
+            // простая шахматная — два оттенка серого
+            const v = cell.v ? 200 : 30; // яркость
+            ctx.fillStyle = `rgb(${v},${v},${v})`;
+            ctx.fillRect(sx,sy,PIXEL,PIXEL);
+          } else {
+            // цветная — получаем цвет и применяем множитель яркости
+            let r=0,g=0,b=0;
+            if(cell.color==='red') r = Math.round(255 * bright[0]);
+            if(cell.color==='green') g = Math.round(255 * bright[1]);
+            if(cell.color==='blue') b = Math.round(255 * bright[2]);
+            ctx.fillStyle = `rgb(${r},${g},${b})`;
+            ctx.fillRect(sx,sy,PIXEL,PIXEL);
+          }
+        }
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    // Запуск анимации
+    requestAnimationFrame(draw);
+
+    // Подгонка видимого размера на экране (чтобы квадраты были крупнее) — оставляем канвас физически 600x600,
+    // но отображаемый размер умножаем на scale; это даст четкие пиксели благодаря image-rendering: pixelated.
+    (function adaptCanvas(){
+      const scale = Math.min(Math.floor(window.innerWidth / 400), Math.floor(window.innerHeight / 400)) || 1;
+      canvas.style.width = (WIDTH * scale) + 'px';
+      canvas.style.height = (HEIGHT * scale) + 'px';
+    })();
+
+    // Обновляем при ресайзе
+    window.addEventListener('resize', ()=>{
+      const scale = Math.min(Math.floor(window.innerWidth / 400), Math.floor(window.innerHeight / 400)) || 1;
+      canvas.style.width = (WIDTH * scale) + 'px';
+      canvas.style.height = (HEIGHT * scale) + 'px';
+    });
+  </script>
+</body>
+</html>

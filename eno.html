@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topographic Map Ambient</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #87a7b4;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="topography"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('topography');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const colorSchemes = [
+            ['#87a7b4', '#b4cbd6', '#dce7ec', '#eef3f5'],
+            ['#6fa8dc', '#9fc5e8', '#c9daf8', '#e7edf9'],
+            ['#bcd4e6', '#d8e6ef', '#eef4f8', '#f7f9fb']
+        ];
+
+        let currentColorScheme = 0;
+        let time = 0;
+
+        function generateSmoothTopoLines() {
+            ctx.fillStyle = colorSchemes[currentColorScheme][0];
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const maxDimension = Math.max(canvas.width, canvas.height);
+
+            const layers = 10;
+            let previousRadii = [];
+
+            for (let layer = 0; layer < layers; layer++) {
+                const color = colorSchemes[currentColorScheme][(layer + 1) % colorSchemes[currentColorScheme].length];
+
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1.2;
+                ctx.globalAlpha = 0.9;
+                ctx.beginPath();
+
+                const numPoints = 200;
+                const baseRadius = maxDimension * (0.08 + layer * 0.06);
+                const radii = [];
+
+                for (let i = 0; i <= numPoints; i++) {
+                    const angle = (i / numPoints) * Math.PI * 2;
+
+                    let noise = Math.sin(angle * (1.3 + layer * 0.3)) * 0.15;
+                    noise += Math.cos(angle * (0.7 + layer * 0.2)) * 0.1;
+
+                    let radius = baseRadius * (1 + noise);
+
+                    if (previousRadii.length > 0) {
+                        radius = Math.max(radius, previousRadii[i] + 10);
+                    }
+
+                    radii.push(radius);
+
+                    const x = centerX + Math.cos(angle) * radius;
+                    const y = centerY + Math.sin(angle) * radius;
+
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+
+                previousRadii = radii;
+                ctx.closePath();
+                ctx.stroke();
+            }
+
+            ctx.globalAlpha = 1;
+        }
+
+        function randomizeAll() {
+            time = Math.random() * 1000;
+            currentColorScheme = Math.floor(Math.random() * colorSchemes.length);
+            generateSmoothTopoLines();
+        }
+
+        canvas.addEventListener('click', randomizeAll);
+
+        generateSmoothTopoLines();
+    </script>
+</body>
+</html>

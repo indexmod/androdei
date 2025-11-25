@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Вертикальные волны + пиксельный строб</title>
+  <style>
+    html,body{
+      height:100%;margin:0;display:flex;
+      align-items:center;justify-content:center;
+      background:#000;
+    }
+    canvas{
+      image-rendering:pixelated;
+      border:6px solid #111;
+      background:#000;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="px" width="600" height="600"></canvas>
+
+<script>
+const PIXEL = 10;
+const WIDTH = 600;
+const HEIGHT = 600;
+
+const canvas = document.getElementById('px');
+const ctx = canvas.getContext('2d');
+
+const cols = WIDTH / PIXEL;
+const rows = HEIGHT / PIXEL;
+
+const colors = ['red','green','blue'];
+const grid = [];
+
+for(let y=0;y<rows;y++){
+  grid[y] = [];
+  for(let x=0;x<cols;x++){
+    const idx = (x + y) % 3;
+    grid[y][x] = colors[idx];
+  }
+}
+
+// анимация
+let start = performance.now();
+
+function draw(now){
+  const t = (now - start) * 0.01;     // скорость волны (быстро)
+  const flick = Math.sin(now * 0.02); // быстрый строб по всей матрице
+
+  ctx.clearRect(0,0,WIDTH,HEIGHT);
+
+  for(let y=0; y<rows; y++){
+    for(let x=0; x<cols; x++){
+
+      // волна идет строго сверху вниз: зависит только от y
+      const wave = Math.sin(y * 0.35 - t);
+
+      // колебание яркости + строб пикселей
+      const bright = 0.25 + (wave + 1) * 0.35 + flick * 0.2;
+
+      let r=0,g=0,b=0;
+      const c = grid[y][x];
+      const br = Math.max(0, Math.min(1, bright));
+
+      if(c==='red')   r = Math.round(255 * br);
+      if(c==='green') g = Math.round(255 * br);
+      if(c==='blue')  b = Math.round(255 * br);
+
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(x*PIXEL, y*PIXEL, PIXEL, PIXEL);
+    }
+  }
+
+  requestAnimationFrame(draw);
+}
+
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
