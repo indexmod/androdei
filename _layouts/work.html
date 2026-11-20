@@ -3,9 +3,42 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>{{ page.title }} — Андр-о-Дей</title>
-  <meta name="description" content="{{ page.title }} — объект Андр-о-Дей, {{ page.year }}">
+  {% assign page_title = page.og_title | default: page.title %}
+  {% assign page_description = page.og_description | default: page.description | default: page.materials | default: 'Объект Андр-о-Дей' %}
+  {% assign favicon_image = page.favicon_image | default: page.image | default: 'works-cover' %}
+  {% assign og_image = page.og_image | default: page.image | default: 'works-cover' %}
+  {% if favicon_image contains '://' %}
+    {% assign favicon_url = favicon_image %}
+  {% else %}
+    {% assign favicon_url = '/images/' | append: favicon_image | append: '.webp' | absolute_url %}
+  {% endif %}
+  {% if og_image contains '://' %}
+    {% assign og_image_url = og_image %}
+  {% else %}
+    {% assign og_image_url = '/images/' | append: og_image | append: '.webp' | absolute_url %}
+  {% endif %}
+  <title>{{ page_title | escape }}</title>
+  <meta name="description" content="{{ page_description | escape }}">
   <meta name="theme-color" content="#ffffff">
+
+  <link rel="icon" type="image/webp" href="{{ favicon_url }}">
+  <link rel="apple-touch-icon" href="{{ favicon_url }}">
+  <link rel="canonical" href="{{ page.url | absolute_url }}">
+
+  <meta property="og:type" content="{{ page.og_type | default: 'article' }}">
+  <meta property="og:site_name" content="Андр-о-Дей">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:title" content="{{ page_title | escape }}">
+  <meta property="og:description" content="{{ page_description | escape }}">
+  <meta property="og:url" content="{{ page.url | absolute_url }}">
+  <meta property="og:image" content="{{ og_image_url }}">
+  <meta property="og:image:alt" content="{{ page.title | escape }}">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page_title | escape }}">
+  <meta name="twitter:description" content="{{ page_description | escape }}">
+  <meta name="twitter:image" content="{{ og_image_url }}">
+  <meta name="twitter:image:alt" content="{{ page.title | escape }}">
 
   {% assign art_direction = page.art_direction | default: page.slug %}
   {% if page.design_css %}
