@@ -2,4 +2,12 @@ title: Andr-o-Dei
 
 collections:
   works:
-    output: false
+    output: true
+    permalink: /works/:name/
+
+defaults:
+  - scope:
+      path: ""
+      type: "works"
+    values:
+      layout: work

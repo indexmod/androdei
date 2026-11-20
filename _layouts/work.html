@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{ page.title }} — Андр-о-Дей</title>
+  <meta name="description" content="{{ page.title }} — объект Андр-о-Дей, {{ page.year }}">
+  <meta name="theme-color" content="#ffffff">
+
+  {% assign work_css = '/styles/works/' | append: page.slug | append: '/style.css' %}
+  <link rel="stylesheet" href="{{ '/styles.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/styles/work-page.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ work_css | relative_url }}">
+</head>
+
+<body class="work-page work-page--{{ page.slug }}">
+  <main class="work-shell">
+    <a class="work-back" href="{{ '/' | relative_url }}">← Все работы</a>
+
+    <article class="work-record">
+      <header class="work-header">
+        <p class="work-kicker">Object / {{ page.slug }}</p>
+        <h1 class="work-title">{{ page.title }}</h1>
+      </header>
+
+      {% if page.image %}
+        <figure class="work-visual">
+          <img src="{{ '/images/' | append: page.image | append: '.webp' | relative_url }}" alt="{{ page.title }}{% if page.year %}, {{ page.year }}{% endif %}">
+        </figure>
+      {% endif %}
+
+      <dl class="work-meta">
+        {% if page.year %}
+          <div class="work-meta-item">
+            <dt>Year</dt>
+            <dd>{{ page.year }}</dd>
+          </div>
+        {% endif %}
+        {% if page.materials %}
+          <div class="work-meta-item">
+            <dt>Technique</dt>
+            <dd>{{ page.materials }}</dd>
+          </div>
+        {% endif %}
+        {% if page.size %}
+          <div class="work-meta-item">
+            <dt>Size</dt>
+            <dd>{{ page.size }}</dd>
+          </div>
+        {% endif %}
+      </dl>
+
+      {% if content != empty %}
+        <div class="work-description">{{ content }}</div>
+      {% endif %}
+    </article>
+  </main>
+</body>
+</html>
