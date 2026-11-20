@@ -18,33 +18,33 @@
     <a class="work-back" href="{{ '/' | relative_url }}">← Все работы</a>
 
     <article class="work-record">
-      <header class="work-header">
-        <p class="work-kicker">Object / {{ page.slug }}</p>
-        <h1 class="work-title">{{ page.title }}</h1>
-      </header>
-
       {% if page.image %}
         <figure class="work-visual">
           <img src="{{ '/images/' | append: page.image | append: '.webp' | relative_url }}" alt="{{ page.title }}{% if page.year %}, {{ page.year }}{% endif %}">
         </figure>
       {% endif %}
 
+      <header class="work-header">
+        <p class="work-kicker">Объект</p>
+        <h1 class="work-title">{{ page.title }}</h1>
+      </header>
+
       <dl class="work-meta">
         {% if page.year %}
           <div class="work-meta-item">
-            <dt>Year</dt>
+            <dt>Год</dt>
             <dd>{{ page.year }}</dd>
           </div>
         {% endif %}
         {% if page.materials %}
           <div class="work-meta-item">
-            <dt>Technique</dt>
+            <dt>Техника</dt>
             <dd>{{ page.materials }}</dd>
           </div>
         {% endif %}
         {% if page.size %}
           <div class="work-meta-item">
-            <dt>Size</dt>
+            <dt>Размер</dt>
             <dd>{{ page.size }}</dd>
           </div>
         {% endif %}

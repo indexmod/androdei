@@ -72,7 +72,6 @@ img {
   max-width: none;
   object-fit: cover;
   object-position: center 48%;
-  filter: grayscale(1) contrast(1.12);
   transform: scale(calc(1 + var(--hero-progress) * .035));
   opacity: calc(1 - var(--hero-progress));
 }
@@ -156,8 +155,6 @@ img {
   min-width: 0;
   min-height: 0;
   padding: var(--card-padding);
-  border: 2px solid var(--ink);
-  border-radius: 0;
   background: var(--card);
 }
 
@@ -208,8 +205,7 @@ img {
 }
 
 .image-link:focus-visible {
-  outline: 4px solid var(--ink);
-  outline-offset: 6px;
+  outline: none;
 }
 
 .image img {
@@ -218,13 +214,11 @@ img {
   height: auto;
   object-fit: contain;
   object-position: center;
-  filter: grayscale(1) contrast(1.12);
-  transition: filter 180ms ease, transform 180ms ease;
+  transition: transform 180ms ease;
 }
 
 .image-link:hover img,
 .image-link:focus-visible img {
-  filter: grayscale(1) contrast(1.35);
   transform: scale(1.012);
 }
 
@@ -234,7 +228,6 @@ img {
   justify-content: center;
   min-height: clamp(180px, 24vw, 360px);
   padding: 24px;
-  border: 2px dashed var(--ink);
   color: var(--ink);
   font-size: clamp(28px, 5vw, 68px);
   font-weight: 900;
@@ -269,8 +262,7 @@ img {
   font-size: 16px;
   font-weight: 800;
   line-height: 1;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
 }
 
 .qr img {
