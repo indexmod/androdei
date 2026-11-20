@@ -11,3 +11,4 @@ defaults:
       type: "works"
     values:
       layout: work
+      art_direction: default
